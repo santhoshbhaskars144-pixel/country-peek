@@ -10,27 +10,35 @@ function Home() {
 
   useEffect(() => {
     if (!query) {
-      setCountries([])
-      setError(null)
-      return
+      const resetTimer = setTimeout(() => {
+        setCountries([])
+        setError(null)
+        setLoading(false)
+      }, 0)
+
+      return () => clearTimeout(resetTimer)
     }
 
     const timer = setTimeout(() => {
-      setLoading(true)
-      fetch(`https://restcountries.com/v3.1/name/${query}`)
-        .then((res) => {
+      const fetchCountries = async () => {
+        setLoading(true)
+        setError(null)
+
+        try {
+          const res = await fetch(`https://restcountries.com/v3.1/name/${query}`)
           if (!res.ok) throw new Error('Not found')
-          return res.json()
-        })
-        .then((data) => {
+          const data = await res.json()
           setCountries(data)
           setError(null)
-        })
-        .catch(() => {
+        } catch {
           setCountries([])
           setError('No countries found.')
-        })
-        .finally(() => setLoading(false))
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      fetchCountries()
     }, 400)
 
     return () => clearTimeout(timer)
